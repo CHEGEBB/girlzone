@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Girlzone AI - Deployment Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 { color: #333; }
+        h2 { color: #666; margin-top: 30px; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Girlzone AI - Deployment Guide</h1>
+    
+    <h2>Quick Deploy to Vercel</h2>
+    <ol>
+        <li>Push your code to GitHub</li>
+        <li>Import project in Vercel dashboard</li>
+        <li>Add environment variables (see .env.example)</li>
+        <li>Deploy</li>
+    </ol>
+
+    <h2>Environment Variables</h2>
+    <p>Add these in Vercel's Environment Variables section:</p>
+    <ul>
+        <li>Stripe API keys (test and live)</li>
+        <li>Database credentials (Supabase/PostgreSQL)</li>
+        <li>AI service API keys</li>
+        <li>Cloudinary configuration</li>
+    </ul>
+    <p><strong>See .env.example for the complete list with placeholders</strong></p>
+
+    <h2>Testing Payments</h2>
+    <p>Use Stripe's test card for testing:</p>
+    <pre>Card: 4242 4242 4242 4242
+Expiry: 12/34
+CVC: 123</pre>
+
+    <h2>Admin Access</h2>
+    <p>Default admin setup key is configured in your environment variables.</p>
+
+    <h2>Support</h2>
+    <p>For deployment help, contact support or check the README.md file.</p>
+
+</body>
+</html>
