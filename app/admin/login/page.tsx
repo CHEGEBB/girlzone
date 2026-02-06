@@ -97,8 +97,9 @@ export default function AdminLoginPage() {
           console.error("Error checking admin status via view:", viewError)
           throw new Error("Error checking admin privileges")
         }
+        
+        const isAdmin = !!(viewData as { is_admin?: boolean })?.is_admin
 
-        const isAdmin = !!viewData?.is_admin
 
         if (!isAdmin) {
           setError("You don't have admin privileges")

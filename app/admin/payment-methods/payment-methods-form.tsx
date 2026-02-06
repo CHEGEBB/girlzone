@@ -37,11 +37,11 @@ export default function PaymentMethodsForm({ initialData }: PaymentMethodsFormPr
     setIsLoading(true)
     try {
       const result = await updateStripeKeys({
-        id: initialData?.id,
         ...data,
-      })
-
-      if (result.success) {
+        id: initialData?.id || data.id,
+      } as any)
+      
+      if ('message' in result && result.message) {
         toast({
           title: "Success",
           description: "Stripe keys updated successfully",
@@ -49,7 +49,7 @@ export default function PaymentMethodsForm({ initialData }: PaymentMethodsFormPr
       } else {
         toast({
           title: "Error",
-          description: result.error || "Failed to update Stripe keys",
+          description: 'error' in result ? result.error : "Failed to update Stripe keys",
           variant: "destructive",
         })
       }

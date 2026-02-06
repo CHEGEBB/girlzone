@@ -90,7 +90,7 @@ COMMENT ON FUNCTION public.delete_user IS 'Allows administrators to delete user 
 
     try {
       // Execute the SQL directly
-      const { error } = await supabase.rpc("exec_sql", { sql: migrationSQL })
+      const { error } = await supabase.rpc("exec_sql", { sql: migrationSQL } as any)
 
       if (error) {
         throw new Error(error.message)

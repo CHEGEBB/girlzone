@@ -59,10 +59,10 @@ export default function AdminBannersPage() {
         }
 
         if (data && data.length > 0) {
-          setAvailableBuckets(data.map((bucket) => bucket.name))
+          setAvailableBuckets(data.map((bucket: { name: any }) => bucket.name))
           console.log(
             "Available buckets:",
-            data.map((bucket) => bucket.name),
+            data.map((bucket: { name: any }) => bucket.name),
           )
         }
       } catch (err) {
@@ -92,7 +92,7 @@ export default function AdminBannersPage() {
         }
 
         // Convert snake_case to camelCase
-        const formattedData = data.map((banner) => ({
+        const formattedData = data.map((banner: { id: any; image_url: any; title: any; subtitle: any; button_text: any; button_link: any; link_url: any; is_active: any; created_at: any }) => ({
           id: banner.id,
           imageUrl: banner.image_url,
           title: banner.title,

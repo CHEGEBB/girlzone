@@ -106,7 +106,7 @@ export type StripeKeys = {
 
 export async function getStripeKeys(): Promise<StripeKeys | null> {
   const cookieStore = await cookies()
-  const supabase = createServerClient(cookieStore)
+  const supabase = createServerClient({ cookies: () => Promise.resolve(cookieStore) })
 
   try {
     const { data, error } = await supabase.from("stripe_keys").select("*").single()

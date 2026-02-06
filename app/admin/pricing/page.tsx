@@ -46,7 +46,7 @@ export default function PricingPage() {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
-        ])
+        ] as any)
 
         if (sqlError && sqlError.message.includes("does not exist")) {
           throw new Error("Unable to create pricing table automatically. Please create it manually.")
@@ -90,7 +90,7 @@ export default function PricingPage() {
         return
       }
 
-      const { data, error } = await supabase.from("pricing").select("*").single()
+      const { data, error } = await supabase.from("pricing").select("*").single() as any
 
       if (error && error.code !== "PGRST116") {
         throw error
@@ -134,7 +134,7 @@ export default function PricingPage() {
 
       if (existingData) {
         // Update existing record
-        result = await supabase.from("pricing").update(pricingData).eq("id", existingData.id)
+        result = await (supabase as any).from("pricing").update(pricingData).eq("id", existingData.id)
       } else {
         // Insert new record
         result = await supabase.from("pricing").insert([
@@ -143,7 +143,7 @@ export default function PricingPage() {
             id: "1", // Use a fixed ID for simplicity
             created_at: new Date().toISOString(),
           },
-        ])
+        ] as any)
       }
 
       if (result.error) {

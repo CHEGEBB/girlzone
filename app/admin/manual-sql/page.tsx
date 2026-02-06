@@ -15,7 +15,7 @@ export default function ManualSQLPage() {
   const [serviceRoleKey, setServiceRoleKey] = useState("")
   const [sqlQuery, setSqlQuery] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<{ success: boolean; message: string; data?: any }>(null)
+  const [result, setResult] = useState<{ success: boolean; message: string; data?: any } | undefined>(undefined)
 
   const executeSQL = async () => {
     if (!supabaseUrl || !serviceRoleKey || !sqlQuery) {
@@ -27,7 +27,7 @@ export default function ManualSQLPage() {
     }
 
     setIsLoading(true)
-    setResult(null)
+    setResult(undefined)
 
     try {
       // Create a Supabase admin client with the provided credentials

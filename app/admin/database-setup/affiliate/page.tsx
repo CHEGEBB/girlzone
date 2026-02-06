@@ -547,7 +547,7 @@ ON CONFLICT (id) DO NOTHING;`
                           {Object.entries(testResults.tests).map(([test, result]) => (
                             <div key={test} className="flex items-center gap-2">
                               <span className="font-medium">{test}:</span>
-                              <span>{result}</span>
+                              <span>{result as string}</span>
                             </div>
                           ))}
                         </div>
