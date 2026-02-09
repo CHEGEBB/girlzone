@@ -871,7 +871,7 @@ export default function GenerateImagePage() {
       }
 
       if (data.job_id) {
-        startVideoStatusCheck(data.job_id)
+        startVideoStatusCheck(data.job_id, data.provider, data.fetch_url, data.future_video_url)
       } else {
         throw new Error("No job ID received")
       }
@@ -882,21 +882,33 @@ export default function GenerateImagePage() {
     }
   }
 
-  const startVideoStatusCheck = (jobId: string) => {
+
+  const startVideoStatusCheck = (jobId: string, provider?: string, fetchUrl?: string, futureVideoUrl?: string) => {
     if (videoStatusCheckInterval.current) {
       clearInterval(videoStatusCheckInterval.current)
     }
-
-    checkVideoStatus(jobId)
+  
+    checkVideoStatus(jobId, provider, fetchUrl, futureVideoUrl)
     videoStatusCheckInterval.current = setInterval(() => {
-      checkVideoStatus(jobId)
+      checkVideoStatus(jobId, provider, fetchUrl, futureVideoUrl)
     }, 3000)
   }
 
-  const checkVideoStatus = async (jobId: string) => {
+  const checkVideoStatus = async (jobId: string, provider?: string, fetchUrl?: string, futureVideoUrl?: string) => {
     try {
-      const response = await fetch(`/api/check-video-generation?jobId=${jobId}`)
-
+      let url = `/api/check-video-generation?jobId=${jobId}`
+      if (provider) {
+        url += `&provider=${provider}`
+      }
+      if (fetchUrl) {
+        url += `&fetch_url=${encodeURIComponent(fetchUrl)}`
+      }
+      if (futureVideoUrl) {
+        url += `&future_video_url=${encodeURIComponent(futureVideoUrl)}`
+      }
+      
+      const response = await fetch(url)
+  
       if (!response.ok) {
         if (response.status >= 400 && response.status < 500) {
           if (videoStatusCheckInterval.current) clearInterval(videoStatusCheckInterval.current)
@@ -905,22 +917,27 @@ export default function GenerateImagePage() {
         }
         return
       }
-
+  
       const result = await response.json()
-
+  
       if (result.status === 'COMPLETED') {
         if (videoStatusCheckInterval.current) clearInterval(videoStatusCheckInterval.current)
-
-        const videoData = `data:video/mp4;base64,${result.video}`
+  
+        const videoData = result.video_url
+        if (!videoData) {
+          setError("No video URL received")
+          setIsGenerating(false)
+          return
+        }
         setGeneratedVideo(videoData)
         setGenerationProgress(100)
         setIsGenerating(false)
-
+  
         // Auto-save video
         if (user) {
           await saveVideoToCollection(videoData)
         }
-
+  
         toast({
           title: "Success!",
           description: "Your video has been generated.",

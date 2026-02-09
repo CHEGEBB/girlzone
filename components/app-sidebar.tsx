@@ -1,4 +1,4 @@
- "use client"
+"use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,6 @@ import {
   PlusSquare,
   Users,
   DollarSign,
-  Shuffle,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-context"
 import { useAuthModal } from "@/components/auth-modal-context"
@@ -99,15 +98,6 @@ export default function AppSidebar() {
       active: pathname?.startsWith("/generate"),
     },
   ] as Array<{ icon: React.ReactNode; label: string; href: string; active: boolean }>
-
-  if (settings.features.faceSwap) {
-    menuItems.push({
-      icon: <Shuffle className="h-5 w-5" />,
-      label: t("nav.faceSwap"),
-      href: "/face-swap",
-      active: (pathname?.startsWith("/face-swap") || false),
-    })
-  }
 
   const secondaryMenuItems = [
     {

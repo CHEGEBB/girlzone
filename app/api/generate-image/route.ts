@@ -25,12 +25,24 @@ const getTokenCost = (model: string, imageCount: number = 1): number => {
   return baseTokenCost * imageCount
 }
 
+// Helper function to validate image URL
+const isValidImageUrl = async (url: string): Promise<boolean> => {
+  try {
+    const response = await fetch(url, { method: 'HEAD' })
+    const contentType = response.headers.get('content-type')
+    return response.ok && contentType?.startsWith('image/')
+  } catch {
+    return false
+  }
+}
+
 export async function POST(req: NextRequest) {
   let userId: string | undefined
   let tokenCost: number | undefined
   let actualImageCount: number
   let actualModel: string
   let usedFallback = false
+  let hasReturnedResponse = false // 🔥 Track if we've already returned
 
   try {
     const supabase = createClient();
@@ -171,9 +183,8 @@ export async function POST(req: NextRequest) {
       console.warn("⚠️ Error tracking model usage:", error)
     }
 
-    // TRY MODELSLAB FIRST (PRIMARY) - Using MoP Mix Juggernaut for photorealism
+    // 🔥 TRY MODELSLAB FIRST (PRIMARY)
     console.log("🎨 Attempting generation with ModelsLab MoP Mix Juggernaut...")
-    let taskId: string | null = null
     let modelsLabSuccess = false
 
     try {
@@ -205,71 +216,104 @@ export async function POST(req: NextRequest) {
       console.log("📥 ModelsLab Response:", JSON.stringify(modelsLabData, null, 2))
 
       if (modelsLabResponse.ok) {
-        // Check if ModelsLab returned images immediately
-        const imageUrls = modelsLabData.output || modelsLabData.meta?.output
+        // 🔥 Check for immediate images first
+        const immediateImageUrls = modelsLabData.output || modelsLabData.meta?.output
         
-        if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0 && imageUrls[0]) {
-          // Images returned - return them immediately
-          console.log(`✅ ModelsLab returned ${imageUrls.length} images immediately (status: ${modelsLabData.status})`)
+        if (immediateImageUrls && Array.isArray(immediateImageUrls) && immediateImageUrls.length > 0) {
+          // Validate images
+          const validImages = []
+          for (const url of immediateImageUrls) {
+            if (url && typeof url === 'string' && url.startsWith('http')) {
+              const isValid = await isValidImageUrl(url)
+              if (isValid) {
+                validImages.push(url)
+              } else {
+                console.warn(`⚠️ Invalid image URL: ${url}`)
+              }
+            }
+          }
           
-          // Return success response directly to frontend
-          return NextResponse.json({
-            status: "TASK_STATUS_SUCCEED",
-            images: imageUrls,
-            tokens_used: tokenCost,
-            provider: "modelslab"
-          })
-        } else if (modelsLabData.id || modelsLabData.fetch_result) {
-          // Async response - need to poll for status
+          if (validImages.length > 0) {
+            console.log(`✅ ModelsLab returned ${validImages.length} valid images immediately`)
+            hasReturnedResponse = true
+            return NextResponse.json({
+              status: "TASK_STATUS_SUCCEED",
+              images: validImages,
+              tokens_used: tokenCost,
+              provider: "modelslab"
+            })
+          }
+        }
+        
+        // 🔥 Only poll if images weren't returned immediately
+        if (!hasReturnedResponse && (modelsLabData.id || modelsLabData.fetch_result)) {
           const fetchUrl = modelsLabData.fetch_result
-          taskId = `modelslab_${modelsLabData.id}`
-          modelsLabSuccess = true
-          console.log(`✅ ModelsLab task created: ${taskId}`)
+          console.log(`⏳ ModelsLab task created, polling: ${modelsLabData.id}`)
           
-          // Poll for completion if needed
           if (fetchUrl) {
             console.log('🔗 Fetch URL:', fetchUrl);
             
             let attempts = 0;
             const maxAttempts = 30;
-            let taskCompleted = false;
 
-            while (attempts < maxAttempts && !taskCompleted) {
+            while (attempts < maxAttempts && !hasReturnedResponse) {
               await new Promise(resolve => setTimeout(resolve, 2000));
               attempts++;
 
-              const statusResponse = await fetch(fetchUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  key: MODELSLAB_API_KEY,
-                }),
-              });
+              try {
+                const statusResponse = await fetch(fetchUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    key: MODELSLAB_API_KEY,
+                  }),
+                });
 
-              if (statusResponse.ok) {
-                const statusData = await statusResponse.json();
-                console.log(`📊 Poll attempt ${attempts}:`, statusData.status);
-                
-                const statusImageUrls = statusData.output || statusData.meta?.output;
+                if (statusResponse.ok) {
+                  const statusData = await statusResponse.json();
+                  console.log(`📊 Poll attempt ${attempts}:`, statusData.status);
+                  
+                  const statusImageUrls = statusData.output || statusData.meta?.output;
 
-                if (statusData.status === 'success' && statusImageUrls && Array.isArray(statusImageUrls) && statusImageUrls.length > 0) {
-                  // Return images immediately
-                  return NextResponse.json({
-                    status: "TASK_STATUS_SUCCEED",
-                    images: statusImageUrls,
-                    tokens_used: tokenCost,
-                    provider: "modelslab"
-                  })
-                } else if (statusData.status === 'failed' || statusData.status === 'error') {
-                  throw new Error(`ModelsLab task failed: ${statusData.message || 'Unknown error'}`);
+                  if (statusData.status === 'success' && statusImageUrls && Array.isArray(statusImageUrls) && statusImageUrls.length > 0) {
+                    // Validate images
+                    const validImages = []
+                    for (const url of statusImageUrls) {
+                      if (url && typeof url === 'string' && url.startsWith('http')) {
+                        const isValid = await isValidImageUrl(url)
+                        if (isValid) {
+                          validImages.push(url)
+                        }
+                      }
+                    }
+                    
+                    if (validImages.length > 0) {
+                      console.log(`✅ ModelsLab polling complete with ${validImages.length} valid images`)
+                      hasReturnedResponse = true
+                      modelsLabSuccess = true
+                      return NextResponse.json({
+                        status: "TASK_STATUS_SUCCEED",
+                        images: validImages,
+                        tokens_used: tokenCost,
+                        provider: "modelslab"
+                      })
+                    }
+                  } else if (statusData.status === 'failed' || statusData.status === 'error') {
+                    console.error(`❌ ModelsLab task failed: ${statusData.message || 'Unknown error'}`);
+                    break; // Exit polling and try fallback
+                  }
                 }
+              } catch (pollError) {
+                console.error(`❌ Poll attempt ${attempts} failed:`, pollError);
               }
             }
+            
+            if (!modelsLabSuccess && !hasReturnedResponse) {
+              console.warn('⚠️ ModelsLab polling completed without success');
+            }
           }
-        } else {
-          console.warn("⚠️ ModelsLab unexpected response format:", modelsLabData)
         }
       } else {
         console.warn("⚠️ ModelsLab failed:", modelsLabData.message || modelsLabData.error)
@@ -278,25 +322,24 @@ export async function POST(req: NextRequest) {
       console.error("❌ ModelsLab Error:", error)
     }
 
-    // FALLBACK TO NOVITA IF MODELSLAB FAILED
-    if (!modelsLabSuccess) {
-      console.log("🔄 Falling back to Novita (less restrictive for adult content)...")
+    // 🔥 FALLBACK TO NOVITA IF MODELSLAB FAILED
+    if (!modelsLabSuccess && !hasReturnedResponse) {
+      console.log("🔄 Falling back to Novita...")
       usedFallback = true
 
       try {
-        // Using the original working model from your code
         const novitaRequestBody = {
           extra: {
             response_image_type: "jpeg",
           },
           request: {
             prompt: prompt + ", photorealistic, 8k, high quality, detailed, professional photography, natural lighting, detailed skin texture, anatomically correct, proper proportions",
-            model_name: "epicrealism_naturalSinRC1VAE_106430.safetensors", // This is the working model from your original code
+            model_name: "epicrealism_naturalSinRC1VAE_106430.safetensors",
             negative_prompt: (negativePrompt ? negativePrompt + ", " : "") + "cartoon, anime, painting, drawing, illustration, low quality, blurry, distorted, deformed, bad anatomy, extra limbs, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, ugly, bad proportions, disfigured, malformed limbs, fused fingers, watermark, signature",
             width: 512,
             height: 1024,
             image_num: actualImageCount,
-            steps: 40, // Increased for better quality
+            steps: 40,
             seed: -1,
             sampler_name: "DPM++ 2M Karras",
             guidance_scale: 7.5,
@@ -317,69 +360,102 @@ export async function POST(req: NextRequest) {
         if (!novitaResponse.ok) {
           const errorData = await novitaResponse.text()
           console.error("❌ Novita API error:", errorData)
-          throw new Error("Both ModelsLab and Novita failed")
+          throw new Error("Novita API request failed")
         }
 
         const novitaData = await novitaResponse.json()
         console.log("📥 Novita Response:", JSON.stringify(novitaData, null, 2))
 
         if (novitaData.task_id) {
-          taskId = `novita_${novitaData.task_id}`
+          const taskId = novitaData.task_id
           console.log(`✅ Novita task created: ${taskId}`)
+          
+          // 🔥 Poll Novita for results
+          let novitaAttempts = 0
+          const novitaMaxAttempts = 60 // 2 minutes max
+
+          while (novitaAttempts < novitaMaxAttempts && !hasReturnedResponse) {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            novitaAttempts++
+
+            try {
+              const resultResponse = await fetch(`${NOVITA_TASK_RESULT_ENDPOINT}?task_id=${taskId}`, {
+                headers: {
+                  Authorization: `Bearer ${NOVITA_API_KEY}`,
+                },
+              })
+
+              if (resultResponse.ok) {
+                const resultData = await resultResponse.json()
+                console.log(`📊 Novita poll attempt ${novitaAttempts}:`, resultData.task?.status)
+
+                if (resultData.task?.status === 'TASK_STATUS_SUCCEED' && resultData.images) {
+                  // Validate images
+                  const validImages = []
+                  for (const img of resultData.images) {
+                    const url = img.image_url
+                    if (url && typeof url === 'string' && url.startsWith('http')) {
+                      const isValid = await isValidImageUrl(url)
+                      if (isValid) {
+                        validImages.push(url)
+                      }
+                    }
+                  }
+                  
+                  if (validImages.length > 0) {
+                    console.log(`✅ Novita complete with ${validImages.length} valid images`)
+                    hasReturnedResponse = true
+                    return NextResponse.json({
+                      status: "TASK_STATUS_SUCCEED",
+                      images: validImages,
+                      tokens_used: tokenCost,
+                      provider: "novita"
+                    })
+                  }
+                } else if (resultData.task?.status === 'TASK_STATUS_FAILED') {
+                  console.error('❌ Novita task failed')
+                  break
+                }
+              }
+            } catch (pollError) {
+              console.error(`❌ Novita poll attempt ${novitaAttempts} failed:`, pollError)
+            }
+          }
         } else {
           throw new Error("No task ID from Novita")
         }
       } catch (error) {
         console.error("❌ Novita Error:", error)
-        
-        // Refund tokens since both APIs failed
-        console.log(`🔄 Refunding ${tokenCost} tokens due to API failure...`)
-        try {
-          await refundTokens(
-            userId,
-            tokenCost,
-            "Refund for failed image generation (both APIs failed)",
-            { error_message: error instanceof Error ? error.message : String(error) }
-          )
-          console.log(`✅ Successfully refunded ${tokenCost} tokens`)
-        } catch (refundError) {
-          console.error("❌ Refund error:", refundError)
-        }
-
-        return NextResponse.json({
-          error: "Image generation failed",
-          details: "Both primary and fallback services are unavailable. Your tokens have been refunded.",
-          refunded: true
-        }, { status: 500 })
       }
     }
 
-    if (!taskId) {
-      // Refund tokens
+    // 🔥 If we get here, both APIs failed - refund tokens
+    if (!hasReturnedResponse) {
+      console.log(`🔄 Refunding ${tokenCost} tokens - both APIs failed...`)
       try {
-        await refundTokens(userId, tokenCost, "Refund for failed task creation", {})
+        await refundTokens(
+          userId,
+          tokenCost,
+          "Refund for failed image generation (both APIs failed)",
+          {}
+        )
+        console.log(`✅ Successfully refunded ${tokenCost} tokens`)
       } catch (refundError) {
         console.error("❌ Refund error:", refundError)
       }
 
       return NextResponse.json({
-        error: "Failed to create generation task",
+        error: "Image generation failed",
+        details: "Both primary and fallback services failed to generate valid images. Your tokens have been refunded.",
         refunded: true
       }, { status: 500 })
     }
-
-    return NextResponse.json({
-      task_id: taskId,
-      tokens_used: tokenCost,
-      used_fallback: usedFallback,
-      provider: usedFallback ? "novita" : "modelslab"
-    })
 
   } catch (error) {
     console.error("❌ Error generating image:", error);
 
     // Refund tokens on unexpected error
-    if (userId && tokenCost) {
+    if (userId && tokenCost && !hasReturnedResponse) {
       try {
         await refundTokens(
           userId,

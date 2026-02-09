@@ -2,17 +2,37 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from "@/lib/supabase/client"
 import { uploadImageToBunny } from "@/lib/cloudinary-upload"
 
+// ModelsLab API Configuration
+const MODELSLAB_API_KEY = process.env.MODELSLAB_API_KEY!
+const MODELSLAB_IMG2VIDEO_ENDPOINT = "https://modelslab.com/api/v6/video/img2video"
+
+// Helper function to validate video URL
+const isValidVideoUrl = async (url: string): Promise<boolean> => {
+  try {
+    const response = await fetch(url, { method: 'HEAD' })
+    const contentType = response.headers.get('content-type')
+    return response.ok && (contentType?.startsWith('video/') || contentType?.includes('mp4'))
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
+  let userId: string | null = null;
+  const VIDEO_TOKEN_COST = 50;
+
   try {
     const {
       image_url,
       prompt,
-      width = 480,
-      height = 832,
+      width = 512,
+      height = 512,
       length = 81,
-      steps = 10,
+      steps = 25,
       seed = 42,
-      cfg = 2
+      cfg = 2,
+      motion_bucket_id = 127,
+      cond_aug = 0.02
     } = await request.json();
 
     if (!image_url) {
@@ -63,21 +83,18 @@ export async function POST(request: NextRequest) {
         if (novitaResponse.ok) {
           const novitaData = await novitaResponse.json();
           enhancedPrompt = novitaData.choices?.[0]?.message?.content || prompt;
-          console.log("[API] Enhanced video prompt:", enhancedPrompt);
+          console.log("[API] ✅ Enhanced video prompt:", enhancedPrompt);
         } else {
-          console.warn("[API] Failed to enhance prompt, using original");
+          console.warn("[API] ⚠️ Failed to enhance prompt, using original");
         }
       } catch (error) {
-        console.error("[API] Error enhancing prompt:", error);
-        // Continue with original prompt if enhancement fails
+        console.error("[API] ❌ Error enhancing prompt:", error);
       }
     }
 
     // Get user authentication
     const authHeader = request.headers.get('authorization');
     const userIdHeader = request.headers.get('x-user-id');
-    
-    let userId: string | null = null;
 
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
@@ -93,43 +110,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is premium
-    try {
-      const premiumCheckResponse = await fetch(
-        `${request.nextUrl.origin}/api/user-premium-status?userId=${userId}`,
-        {
-          headers: authHeader ? { Authorization: authHeader } : { 'X-User-ID': userId }
-        }
-      );
+    console.log(`👤 User authenticated: ${userId.substring(0, 8)}...`)
 
-      if (premiumCheckResponse.ok) {
-        const premiumData = await premiumCheckResponse.json();
-        if (!premiumData.isPremium) {
+    // Check premium status
+    const isTestMode = process.env.TEST_MODE === 'true';
+
+    if (!isTestMode) {
+      try {
+        const premiumCheckResponse = await fetch(
+          `${request.nextUrl.origin}/api/user-premium-status?userId=${userId}`,
+          {
+            headers: authHeader ? { Authorization: authHeader } : { 'X-User-ID': userId }
+          }
+        );
+
+        if (premiumCheckResponse.ok) {
+          const premiumData = await premiumCheckResponse.json();
+          if (!premiumData.isPremium) {
+            return NextResponse.json(
+              { 
+                error: 'Video generation is a premium feature. Please upgrade to access this feature.',
+                isPremium: false,
+                upgradeUrl: '/premium'
+              },
+              { status: 403 }
+            );
+          }
+          console.log('👑 User is premium')
+        } else {
           return NextResponse.json(
-            { 
-              error: 'Video generation is a premium feature. Please upgrade to access this feature.',
-              isPremium: false,
-              upgradeUrl: '/premium'
-            },
+            { error: 'Unable to verify premium status' },
             { status: 403 }
           );
         }
-      } else {
-        // If premium check fails, deny access
+      } catch (error) {
+        console.error('Error checking premium status:', error);
         return NextResponse.json(
           { error: 'Unable to verify premium status' },
           { status: 403 }
         );
       }
-    } catch (error) {
-      console.error('Error checking premium status:', error);
-      return NextResponse.json(
-        { error: 'Unable to verify premium status' },
-        { status: 403 }
-      );
+    } else {
+      console.log('⚠️ TEST MODE - Premium check bypassed')
     }
 
-    // Deduct tokens (50 tokens for video generation)
+    // Deduct tokens
     try {
       const deductResponse = await fetch(`${request.nextUrl.origin}/api/deduct-token`, {
         method: 'POST',
@@ -138,7 +163,7 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({ 
           userId, 
-          amount: 50,
+          amount: VIDEO_TOKEN_COST,
           description: 'Video generation',
           type: 'video_generation'
         }),
@@ -153,7 +178,7 @@ export async function POST(request: NextRequest) {
               error: 'Insufficient tokens',
               insufficientTokens: true,
               currentBalance: deductData.currentBalance || 0,
-              requiredTokens: 50
+              requiredTokens: VIDEO_TOKEN_COST
             },
             { status: 400 }
           );
@@ -164,6 +189,7 @@ export async function POST(request: NextRequest) {
           );
         }
       }
+      console.log(`✅ Successfully deducted ${VIDEO_TOKEN_COST} tokens`)
     } catch (error) {
       console.error('Error deducting tokens:', error);
       return NextResponse.json(
@@ -172,26 +198,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const runpodApiKey = process.env.RUNPOD_API_KEY;
-    if (!runpodApiKey) {
-      // Refund tokens on error
-      await fetch(`${request.nextUrl.origin}/api/deduct-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, amount: -50 }),
-      });
-      
-      return NextResponse.json(
-        { error: 'RunPod API key not configured' },
-        { status: 500 }
-      );
-    }
-
-    // Upload image to Bunny.net CDN first, then send URL to RunPod
-    console.log("[API] Uploading image to Bunny.net CDN for video generation...");
+    // Upload image to Bunny CDN
+    console.log("[API] Uploading image to Bunny.net CDN...");
     let bunnyImageUrl: string;
     try {
-      // Fetch the image from the source URL
       const imageResponse = await fetch(image_url);
       if (!imageResponse.ok) {
         throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
@@ -201,17 +211,16 @@ export async function POST(request: NextRequest) {
       const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
       const base64Image = `data:${contentType};base64,${imageBase64Data}`;
       
-      // Upload to Bunny.net and get public URL
       bunnyImageUrl = await uploadImageToBunny(base64Image);
-      console.log("[API] Image uploaded to Bunny.net:", bunnyImageUrl);
+      console.log("[API] ✅ Image uploaded to Bunny.net:", bunnyImageUrl);
     } catch (error) {
       console.error("[API] Failed to upload image to Bunny.net:", error);
       
-      // Refund tokens on error
+      // Refund tokens
       await fetch(`${request.nextUrl.origin}/api/deduct-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, amount: -50 }),
+        body: JSON.stringify({ userId, amount: -VIDEO_TOKEN_COST }),
       });
       
       return NextResponse.json(
@@ -220,7 +229,83 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call RunPod video generation endpoint (async)
+    // 🔥 TRY MODELSLAB VIDEO GENERATION FIRST
+    console.log("🎬 Trying ModelsLab video generation...");
+    
+    if (MODELSLAB_API_KEY) {
+      try {
+        const modelsLabRequestBody = {
+          key: MODELSLAB_API_KEY,
+          init_image: bunnyImageUrl,
+          prompt: enhancedPrompt,
+          width: width,
+          height: height,
+          motion_bucket_id: motion_bucket_id,
+          cond_aug: cond_aug,
+          steps: steps,
+          seed: seed,
+          webhook: null,
+          track_id: null
+        }
+
+        console.log("📤 ModelsLab Video Request:", JSON.stringify(modelsLabRequestBody, null, 2))
+
+        const modelsLabResponse = await fetch(MODELSLAB_IMG2VIDEO_ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(modelsLabRequestBody),
+        })
+
+        const modelsLabData = await modelsLabResponse.json()
+        console.log("📥 ModelsLab Video Response:", JSON.stringify(modelsLabData, null, 2))
+
+        if (modelsLabResponse.ok && (modelsLabData.id || modelsLabData.fetch_result)) {
+          const fetchUrl = modelsLabData.fetch_result
+          const taskId = modelsLabData.id
+          
+          // Check if we already have the video URL in future_links
+          const futureVideoUrl = modelsLabData.future_links?.[0] || modelsLabData.meta?.output?.[0];
+          
+          console.log(`✅ ModelsLab video task created: ${taskId}`)
+          console.log(`📍 Future video URL: ${futureVideoUrl || 'Not yet available'}`)
+          
+          return NextResponse.json({
+            success: true,
+            job_id: taskId,
+            status: modelsLabData.status || 'processing',
+            provider: 'modelslab',
+            fetch_url: fetchUrl,
+            future_video_url: futureVideoUrl // Store this so frontend can use it
+          });
+        } else {
+          throw new Error(modelsLabData.message || "ModelsLab request failed")
+        }
+
+      } catch (modelsLabError) {
+        console.error("❌ ModelsLab Error:", modelsLabError)
+        console.log("⚠️ Falling back to RunPod...")
+      }
+    }
+
+    // 🔄 FALLBACK TO RUNPOD
+    const runpodApiKey = process.env.RUNPOD_API_KEY;
+    if (!runpodApiKey) {
+      // Refund tokens on error
+      await fetch(`${request.nextUrl.origin}/api/deduct-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount: -VIDEO_TOKEN_COST }),
+      });
+      
+      return NextResponse.json(
+        { error: 'No video generation service available', refunded: true },
+        { status: 500 }
+      );
+    }
+
+    console.log("🔄 Using RunPod fallback...");
     const runpodResponse = await fetch('https://api.runpod.ai/v2/1r3p16wimwa0v2/run', {
       method: 'POST',
       headers: {
@@ -249,7 +334,7 @@ export async function POST(request: NextRequest) {
       await fetch(`${request.nextUrl.origin}/api/deduct-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, amount: -50 }),
+        body: JSON.stringify({ userId, amount: -VIDEO_TOKEN_COST }),
       });
       
       return NextResponse.json(
@@ -260,7 +345,6 @@ export async function POST(request: NextRequest) {
 
     const runpodData = await runpodResponse.json();
 
-    // Return job ID for status polling
     if (!runpodData.id) {
       console.error('No job ID in response:', runpodData);
       
@@ -268,7 +352,7 @@ export async function POST(request: NextRequest) {
       await fetch(`${request.nextUrl.origin}/api/deduct-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, amount: -50 }),
+        body: JSON.stringify({ userId, amount: -VIDEO_TOKEN_COST }),
       });
       
       return NextResponse.json(
@@ -277,18 +361,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Video generation started successfully, job ID:', runpodData.id);
+    console.log('✅ RunPod video generation started, job ID:', runpodData.id);
 
     return NextResponse.json({
       success: true,
       job_id: runpodData.id,
-      status: runpodData.status
+      status: runpodData.status,
+      provider: 'runpod'
     });
 
   } catch (error) {
-    console.error('Error in video generation:', error);
+    console.error('❌ Error in video generation:', error);
+    
+    // Refund tokens on error
+    if (userId) {
+      await fetch(`${request.nextUrl.origin}/api/deduct-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount: -VIDEO_TOKEN_COST }),
+      });
+    }
+    
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'An unexpected error occurred', refunded: true },
       { status: 500 }
     );
   }

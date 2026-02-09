@@ -29,7 +29,7 @@ import {
   clearChatHistory,
   getRecentChats
 } from "@/lib/chat-actions"
-import { checkNovitaApiKey } from "@/lib/api-key-utils"
+{/* API key error displa// Removed checkNovitaApiKey import - using Groq nowy removed */}
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-context"
 import { createClient } from "@/lib/supabase/client"
@@ -253,27 +253,7 @@ export default function ChatClient({
     return () => clearTimeout(scrollTimeout)
   }, [messages])
 
-  // Check API key
-  useEffect(() => {
-    let isCancelled = false
-
-    async function validateApiKey() {
-      try {
-        const result = await checkNovitaApiKey()
-        if (!isCancelled && result && !result.valid) {
-          setApiKeyError(result.message)
-        }
-      } catch (error) {
-        console.error("Error validating API key:", error)
-      }
-    }
-
-    validateApiKey()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [])
+  // API key validation removed - using Groq now
 
   // Clean up interval on unmount
   useEffect(() => {
@@ -849,17 +829,7 @@ export default function ChatClient({
           return updatedMessages
         })
 
-        // Save image message to database
-        if (userId) {
-          saveMessage({
-            content: imageMessage.content,
-            role: "assistant",
-            user_id: userId,
-            character_id: characterId,
-            is_image: true,
-            image_url: responseData.imageUrl
-          })
-        }
+        // 🔥 REMOVED: Don't save to database here - API already did it!
       } else {
         throw new Error("No image was generated")
       }
@@ -1079,10 +1049,7 @@ export default function ChatClient({
 
         if (!isMounted) return
 
-        // Check if the response indicates an API key error
-        if (aiResponse.content.includes("trouble connecting") || aiResponse.content.includes("try again")) {
-          setApiKeyError("There might be an issue with the API key. Please check your Novita API key configuration.")
-        }
+        // API key error check removed - using Groq
 
         // Create assistant message
         const assistantMessage = {
@@ -1490,13 +1457,7 @@ export default function ChatClient({
           <div ref={messagesEndRef} />
         </div>
 
-        {apiKeyError && (
-          <div className={`${isMobile ? 'mx-2 p-2' : 'mx-4 p-3'} bg-destructive/20 border border-destructive text-destructive-foreground rounded-lg ${isMobile ? 'text-xs' : 'text-sm'}`}>
-            <p className={`${isMobile ? 'text-xs' : 'font-medium'}`}>{t('pages.chatDetail.apiKeyTitle')}</p>
-            <p className={isMobile ? 'text-xs' : ''}>{apiKeyError || t('pages.chatDetail.apiKeyBody')}</p>
-            <p className={`${isMobile ? 'mt-0.5 text-xs' : 'mt-1'}`}>{t('pages.chatDetail.apiKeyAdminHint')}</p>
-          </div>
-        )}
+        {/* API key error display removed */}
 
         {/* Chat Input */}
         <div className={`${isMobile ? 'fixed bottom-0 left-0 right-0 p-2 pb-6 z-[50] border-t border-border' : 'p-2 md:p-4 sticky bottom-0 z-10'} bg-background`}>

@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Image already saved", imageId: existingImages[0].id }, { status: 200 })
     }
 
-    // Insert the new image
+    // Insert the new image to generated_images table
     const insertData: any = {
       user_id: userId,
       prompt: prompt || "Generated in chat",
@@ -80,18 +80,42 @@ export async function POST(request: NextRequest) {
       insertData.character_id = characterId
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data: imageData, error: imageError } = await supabaseAdmin
       .from("generated_images")
       .insert(insertData)
       .select()
       .single()
 
-    if (error) {
-      console.error("[API] Error saving image:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (imageError) {
+      console.error("[API] Error saving image to generated_images:", imageError)
+      return NextResponse.json({ error: imageError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, image: data })
+    // 🆕 CRITICAL: Also save to messages table so it shows in chat history
+    if (characterId) {
+      console.log("[API] Saving image message to messages table for chat history...")
+      
+      const { error: messageError } = await supabaseAdmin
+        .from("messages")
+        .insert({
+          user_id: userId,
+          character_id: characterId,
+          role: "assistant",
+          content: "", // Empty content for image messages
+          is_image: true,
+          image_url: bunnyUrl,
+          created_at: new Date().toISOString()
+        })
+
+      if (messageError) {
+        console.error("[API] Error saving image to messages table:", messageError)
+        // Don't fail the whole request, image is already in generated_images
+      } else {
+        console.log("[API] ✅ Image successfully saved to both tables")
+      }
+    }
+
+    return NextResponse.json({ success: true, image: imageData })
   } catch (error) {
     console.error("[API] Unexpected error:", error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
