@@ -33,7 +33,7 @@ INSERT INTO footer_content (id, content) VALUES (
       {"id": 1, "title": "Terms and Policies", "url": "/terms"}
     ],
     "company": [
-      {"id": 1, "title": "We\'re hiring", "url": "/careers"}
+      {"id": 1, "title": "We''re hiring", "url": "/careers"}
     ]
   }'
 ) ON CONFLICT (id) DO NOTHING;

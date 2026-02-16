@@ -20,36 +20,42 @@ export async function checkPremiumStatus(userId: string, supabase: SupabaseClien
             }
         }
 
-        // Method 1: Check premium_profiles table
+        // Method 1: Check premium_profiles table (FIXED!)
         const { data: premiumProfile, error: premiumError } = await supabase
             .from("premium_profiles")
             .select(`
-                expires_at,
+                is_premium,
+                premium_end_date,
+                subscription_status,
                 subscription_plans (name)
             `)
             .eq("user_id", userId)
             .maybeSingle();
 
         if (!premiumError && premiumProfile) {
-            const expiresAt = premiumProfile.expires_at;
-            
-            // Handle subscription_plans safely regardless of type
-            let planName = null;
-            const plans = premiumProfile.subscription_plans;
-            
-            if (Array.isArray(plans)) {
-                planName = plans[0]?.name;
-            } else if (plans && typeof plans === 'object') {
-                // @ts-ignore - Supabase types might be tricky with joined tables
-                planName = plans.name;
-            }
+            // Check is_premium flag first
+            if (premiumProfile.is_premium && premiumProfile.subscription_status === 'active') {
+                const expiresAt = premiumProfile.premium_end_date;
+                
+                // Handle subscription_plans safely regardless of type
+                let planName = null;
+                const plans = premiumProfile.subscription_plans;
+                
+                if (Array.isArray(plans)) {
+                    planName = plans[0]?.name;
+                } else if (plans && typeof plans === 'object') {
+                    // @ts-ignore - Supabase types might be tricky with joined tables
+                    planName = plans.name;
+                }
 
-            if (expiresAt && new Date(expiresAt) > new Date()) {
-                return { 
-                    isPremium: true, 
-                    expiresAt, 
-                    planName 
-                };
+                // Check if premium hasn't expired
+                if (!expiresAt || new Date(expiresAt) > new Date()) {
+                    return { 
+                        isPremium: true, 
+                        expiresAt, 
+                        planName: planName || "Premium Plan"
+                    };
+                }
             }
         }
 
