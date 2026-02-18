@@ -1376,7 +1376,7 @@ export default function GenerateImagePage() {
             {isGenerating ? (
               <>
                 <Loader2 className={`mr-2 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'} animate-spin`} />
-                {mediaType === 'video' ? 'Generating...' : `Generating... ${Math.round(generationProgress)}%`}
+                {mediaType === 'video' ? `Creating your video... this takes 2-4 mins ⏳` : `Generating... ${Math.round(generationProgress)}%`}
               </>
             ) : (
               <>
@@ -1450,7 +1450,7 @@ export default function GenerateImagePage() {
             {timeoutWarning && (
               <div className={`${isMobile ? 'mt-3 p-2' : 'mt-4 p-3'} bg-yellow-900/20 border border-yellow-800 text-yellow-300 rounded-lg flex items-center ${isMobile ? 'max-w-sm' : 'max-w-md'}`}>
                 <Clock className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
-                <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>Hang tight! Your video is being created...</span>
+                <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>AI video generation takes 2-4 minutes. Please don't close this page! ☕</span>
               </div>
             )}
           </div>
