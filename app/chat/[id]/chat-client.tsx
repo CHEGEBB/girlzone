@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { GallerySkeleton } from "@/components/skeletons"
+import Image from "next/image"
 
 interface ChatClientProps {
   characterId: string
@@ -1470,229 +1471,290 @@ export default function ChatClient({
               onKeyDown={handleKeyPress}
               disabled={isLoading || isGeneratingImage}
             />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`flex-shrink-0 rounded-full hover:bg-muted ${isMobile ? 'h-10 w-10' : 'h-10 w-10'}`}
-                  title={t('pages.chatDetail.askForImagesTitle')}
-                >
-                  <ImageIcon className={`${isMobile ? 'h-5 w-5' : 'h-5 w-5'}`} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="max-h-[400px] overflow-y-auto w-64">
-              {/* POSES SECTION */}
-              <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50">🔥 Poses</div>
-              <DropdownMenuItem onClick={() => setInputValue("Show me a sexy selfie of you")} className="flex items-center gap-2">
-                <img src="/poses/1.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Sexy Selfie</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you topless, sitting down and looking sultry")} className="flex items-center gap-2">
-                <img src="/poses/2.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Topless</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me your pussy, legs spread wide")} className="flex items-center gap-2">
-                <img src="/poses/3.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Pussy</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you on all fours grabbing your naked ass from behind")} className="flex items-center gap-2">
-                <img src="/poses/4.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Ass</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you having cowgirl sex, you on top, excited expression")} className="flex items-center gap-2">
-                <img src="/poses/5.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Cowgirl</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you having doggy style sex on all fours")} className="flex items-center gap-2">
-                <img src="/poses/6.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Doggy Style</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you performing oral sex")} className="flex items-center gap-2">
-                <img src="/poses/7.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Blowjob</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you having missionary sex with legs in the air")} className="flex items-center gap-2">
-                <img src="/poses/8.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Missionary</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you rubbing your pussy, masturbating")} className="flex items-center gap-2">
-                <img src="/poses/9.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Masturbation</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you inserting a dildo, focused on vagina")} className="flex items-center gap-2">
-                <img src="/poses/10.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Dildo</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you tied up in bondage ropes, naked")} className="flex items-center gap-2">
-                <img src="/poses/11.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Bondage</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you giving a handjob from my POV")} className="flex items-center gap-2">
-                <img src="/poses/12.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Handjob</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you with penis between your breasts, titfuck")} className="flex items-center gap-2">
-                <img src="/poses/13.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Boobjob</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you getting fucked in reverse cowgirl")} className="flex items-center gap-2">
-                <img src="/poses/14.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Reverse Cowgirl</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you squirting, orgasm")} className="flex items-center gap-2">
-                <img src="/poses/15.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Squirting</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you kneeling with face covered in cum")} className="flex items-center gap-2">
-                <img src="/poses/16.jpg" alt="" className="w-8 h-8 rounded-full object-cover" />
-                <span>Cumshot</span>
-              </DropdownMenuItem>
-            
-              {/* ENVIRONMENTS SECTION */}
-              <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50 mt-2">🏠 Environments</div>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you naked in the bathroom, wet from shower")} className="flex items-center gap-2">
-                <img src="/poses/17.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Bathroom</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in the shower, water running down your body")} className="flex items-center gap-2">
-                <img src="/poses/18.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Shower</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you lying naked on the bed, bedroom setting")} className="flex items-center gap-2">
-                <img src="/poses/19.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Bedroom</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a sexy classroom setting, as a naughty student")} className="flex items-center gap-2">
-                <img src="/poses/20.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Classroom</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a sexy office setting, as a naughty secretary")} className="flex items-center gap-2">
-                <img src="/poses/21.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Office</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a gym, wearing tight workout clothes")} className="flex items-center gap-2">
-                <img src="/poses/22.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Gym</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you at the beach, bikini, sandy and wet")} className="flex items-center gap-2">
-                <img src="/poses/23.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Beach</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you by the pool, wet swimsuit, sunbathing")} className="flex items-center gap-2">
-                <img src="/poses/24.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Pool</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a hot tub, steamy and relaxed")} className="flex items-center gap-2">
-                <img src="/poses/25.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Hot Tub</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in the kitchen, wearing just an apron")} className="flex items-center gap-2">
-                <img src="/poses/26.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Kitchen</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a luxury hotel room, romantic setting")} className="flex items-center gap-2">
-                <img src="/poses/27.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Hotel Room</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a car, backseat, intimate setting")} className="flex items-center gap-2">
-                <img src="/poses/28.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Car Backseat</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a forest, outdoor nature setting")} className="flex items-center gap-2">
-                <img src="/poses/29.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Forest</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you on a balcony, city view, nighttime")} className="flex items-center gap-2">
-                <img src="/poses/30.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Balcony</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a changing room, trying on lingerie")} className="flex items-center gap-2">
-                <img src="/poses/31.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Changing Room</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a sauna, steamy and relaxed")} className="flex items-center gap-2">
-                <img src="/poses/32.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Sauna</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a library, secret naughty moment")} className="flex items-center gap-2">
-                <img src="/poses/33.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Library</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a nightclub, party atmosphere")} className="flex items-center gap-2">
-                <img src="/poses/34.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Nightclub</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a penthouse, luxury city view")} className="flex items-center gap-2">
-                <img src="/poses/35.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Penthouse</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a yacht, ocean view, luxurious")} className="flex items-center gap-2">
-                <img src="/poses/36.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Yacht</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a private jet, mile high club")} className="flex items-center gap-2">
-                <img src="/poses/37.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Private Jet</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a barn, countryside setting")} className="flex items-center gap-2">
-                <img src="/poses/38.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Barn</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a locker room, after workout")} className="flex items-center gap-2">
-                <img src="/poses/39.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Locker Room</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a rooftop, sunset, romantic")} className="flex items-center gap-2">
-                <img src="/poses/40.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Rooftop</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a dorm room, college setting")} className="flex items-center gap-2">
-                <img src="/poses/41.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Dorm Room</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a spa, relaxed and pampered")} className="flex items-center gap-2">
-                <img src="/poses/42.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Spa</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a studio, modeling photoshoot")} className="flex items-center gap-2">
-                <img src="/poses/43.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Photo Studio</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you camping, outdoor tent setting")} className="flex items-center gap-2">
-                <img src="/poses/44.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Camping</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a bar, after hours, seductive")} className="flex items-center gap-2">
-                <img src="/poses/45.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Bar</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a treehouse, natural and secluded")} className="flex items-center gap-2">
-                <img src="/poses/46.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Treehouse</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a castle, medieval fantasy setting")} className="flex items-center gap-2">
-                <img src="/poses/47.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Castle</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a Japanese onsen, hot spring bath")} className="flex items-center gap-2">
-                <img src="/poses/48.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Onsen</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in an elevator, risky public setting")} className="flex items-center gap-2">
-                <img src="/poses/49.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Elevator</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a massage parlor, on the table")} className="flex items-center gap-2">
-                <img src="/poses/50.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Massage Table</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setInputValue("Show me you in a tropical resort, paradise setting")} className="flex items-center gap-2">
-                <img src="/poses/51.jpg" alt="" className="w-8 h-8 rounded-md object-cover" />
-                <span>Tropical Resort</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-            </DropdownMenu>
+          
+{/* Silently preload all pose images so dropdown feels instant */}
+<div className="hidden" aria-hidden="true">
+  {Array.from({ length: 51 }, (_, i) => (
+    <img key={i} src={`/poses/${i + 1}.jpg`} alt="" width={32} height={32} />
+  ))}
+</div>
+
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button
+      variant="ghost"
+      size="icon"
+      className={`flex-shrink-0 rounded-full hover:bg-muted ${isMobile ? 'h-10 w-10' : 'h-10 w-10'}`}
+      title={t('pages.chatDetail.askForImagesTitle')}
+    >
+      <ImageIcon className={`${isMobile ? 'h-5 w-5' : 'h-5 w-5'}`} />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent className="max-h-[400px] overflow-y-auto w-64">
+
+    {/* ── POSES SECTION ── */}
+    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50">🔥 Poses</div>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me a sexy selfie of you")} className="flex items-center gap-2">
+      <Image src="/poses/1.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Sexy Selfie</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you topless, sitting down and looking sultry")} className="flex items-center gap-2">
+      <Image src="/poses/2.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Topless</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me your pussy, legs spread wide")} className="flex items-center gap-2">
+      <Image src="/poses/3.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Pussy</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you on all fours grabbing your naked ass from behind")} className="flex items-center gap-2">
+      <Image src="/poses/4.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Ass</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you having cowgirl sex, you on top, excited expression")} className="flex items-center gap-2">
+      <Image src="/poses/5.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Cowgirl</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you having doggy style sex on all fours")} className="flex items-center gap-2">
+      <Image src="/poses/6.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Doggy Style</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you performing oral sex")} className="flex items-center gap-2">
+      <Image src="/poses/7.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Blowjob</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you having missionary sex with legs in the air")} className="flex items-center gap-2">
+      <Image src="/poses/8.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Missionary</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you rubbing your pussy, masturbating")} className="flex items-center gap-2">
+      <Image src="/poses/9.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Masturbation</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you inserting a dildo, focused on vagina")} className="flex items-center gap-2">
+      <Image src="/poses/10.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Dildo</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you tied up in bondage ropes, naked")} className="flex items-center gap-2">
+      <Image src="/poses/11.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Bondage</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you giving a handjob from my POV")} className="flex items-center gap-2">
+      <Image src="/poses/12.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Handjob</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you with penis between your breasts, titfuck")} className="flex items-center gap-2">
+      <Image src="/poses/13.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Boobjob</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you getting fucked in reverse cowgirl")} className="flex items-center gap-2">
+      <Image src="/poses/14.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Reverse Cowgirl</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you squirting, orgasm")} className="flex items-center gap-2">
+      <Image src="/poses/15.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Squirting</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you kneeling with face covered in cum")} className="flex items-center gap-2">
+      <Image src="/poses/16.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+      <span>Cumshot</span>
+    </DropdownMenuItem>
+
+    {/* ── ENVIRONMENTS SECTION ── */}
+    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50 mt-2">🏠 Environments</div>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you naked in the bathroom, wet from shower")} className="flex items-center gap-2">
+      <Image src="/poses/17.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Bathroom</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in the shower, water running down your body")} className="flex items-center gap-2">
+      <Image src="/poses/18.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Shower</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you lying naked on the bed, bedroom setting")} className="flex items-center gap-2">
+      <Image src="/poses/19.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Bedroom</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a sexy classroom setting, as a naughty student")} className="flex items-center gap-2">
+      <Image src="/poses/20.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Classroom</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a sexy office setting, as a naughty secretary")} className="flex items-center gap-2">
+      <Image src="/poses/21.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Office</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a gym, wearing tight workout clothes")} className="flex items-center gap-2">
+      <Image src="/poses/22.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Gym</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you at the beach, bikini, sandy and wet")} className="flex items-center gap-2">
+      <Image src="/poses/23.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Beach</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you by the pool, wet swimsuit, sunbathing")} className="flex items-center gap-2">
+      <Image src="/poses/24.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Pool</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a hot tub, steamy and relaxed")} className="flex items-center gap-2">
+      <Image src="/poses/25.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Hot Tub</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in the kitchen, wearing just an apron")} className="flex items-center gap-2">
+      <Image src="/poses/26.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Kitchen</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a luxury hotel room, romantic setting")} className="flex items-center gap-2">
+      <Image src="/poses/27.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Hotel Room</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a car, backseat, intimate setting")} className="flex items-center gap-2">
+      <Image src="/poses/28.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Car Backseat</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a forest, outdoor nature setting")} className="flex items-center gap-2">
+      <Image src="/poses/29.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Forest</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you on a balcony, city view, nighttime")} className="flex items-center gap-2">
+      <Image src="/poses/30.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Balcony</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a changing room, trying on lingerie")} className="flex items-center gap-2">
+      <Image src="/poses/31.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Changing Room</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a sauna, steamy and relaxed")} className="flex items-center gap-2">
+      <Image src="/poses/32.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Sauna</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a library, secret naughty moment")} className="flex items-center gap-2">
+      <Image src="/poses/33.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Library</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a nightclub, party atmosphere")} className="flex items-center gap-2">
+      <Image src="/poses/34.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Nightclub</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a penthouse, luxury city view")} className="flex items-center gap-2">
+      <Image src="/poses/35.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Penthouse</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a yacht, ocean view, luxurious")} className="flex items-center gap-2">
+      <Image src="/poses/36.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Yacht</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a private jet, mile high club")} className="flex items-center gap-2">
+      <Image src="/poses/37.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Private Jet</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a barn, countryside setting")} className="flex items-center gap-2">
+      <Image src="/poses/38.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Barn</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a locker room, after workout")} className="flex items-center gap-2">
+      <Image src="/poses/39.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Locker Room</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a rooftop, sunset, romantic")} className="flex items-center gap-2">
+      <Image src="/poses/40.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Rooftop</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a dorm room, college setting")} className="flex items-center gap-2">
+      <Image src="/poses/41.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Dorm Room</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a spa, relaxed and pampered")} className="flex items-center gap-2">
+      <Image src="/poses/42.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Spa</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a studio, modeling photoshoot")} className="flex items-center gap-2">
+      <Image src="/poses/43.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Photo Studio</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you camping, outdoor tent setting")} className="flex items-center gap-2">
+      <Image src="/poses/44.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Camping</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a bar, after hours, seductive")} className="flex items-center gap-2">
+      <Image src="/poses/45.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Bar</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a treehouse, natural and secluded")} className="flex items-center gap-2">
+      <Image src="/poses/46.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Treehouse</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a castle, medieval fantasy setting")} className="flex items-center gap-2">
+      <Image src="/poses/47.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Castle</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a Japanese onsen, hot spring bath")} className="flex items-center gap-2">
+      <Image src="/poses/48.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Onsen</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in an elevator, risky public setting")} className="flex items-center gap-2">
+      <Image src="/poses/49.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Elevator</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a massage parlor, on the table")} className="flex items-center gap-2">
+      <Image src="/poses/50.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Massage Table</span>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem onClick={() => setInputValue("Show me you in a tropical resort, paradise setting")} className="flex items-center gap-2">
+      <Image src="/poses/51.jpg" alt="" width={32} height={32} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+      <span>Tropical Resort</span>
+    </DropdownMenuItem>
+
+  </DropdownMenuContent>
+</DropdownMenu>
             <Button
               size="icon"
               className={`flex-shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'h-10 w-10' : 'h-10 w-10'}`}
