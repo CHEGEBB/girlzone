@@ -1,6 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Helper function to validate and download image
+async function downloadImageAsBase64(imageUrl: string): Promise<string | null> {
+  try {
+    console.log(`📥 Downloading image from: ${imageUrl.substring(0, 50)}...`);
+    
+    // First validate with HEAD request
+    const headResponse = await fetch(imageUrl, { 
+      method: 'HEAD',
+      timeout: 5000 
+    });
+    
+    if (!headResponse.ok) {
+      console.error(`❌ Image URL returned ${headResponse.status}`);
+      return null;
+    }
+    
+    const contentType = headResponse.headers.get('content-type');
+    if (!contentType?.startsWith('image/')) {
+      console.error(`❌ URL is not an image: ${contentType}`);
+      return null;
+    }
+    
+    // Download the image
+    const imageResponse = await fetch(imageUrl, { 
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; ImageFetcher/1.0)'
+      }
+    });
+    
+    if (!imageResponse.ok) {
+      console.error(`❌ Failed to download image: ${imageResponse.status}`);
+      return null;
+    }
+    
+    const imageBuffer = await imageResponse.arrayBuffer();
+    console.log(`✅ Image downloaded: ${imageBuffer.byteLength} bytes`);
+    
+    return Buffer.from(imageBuffer).toString('base64');
+  } catch (error) {
+    console.error('❌ Error downloading image:', error);
+    return null;
+  }
+}
+
+// Helper function to validate base64 image data
+function isValidBase64Image(base64String: string): boolean {
+  try {
+    // Check if it's a valid base64 string (minimum length for a tiny image)
+    if (!base64String || base64String.length < 100) {
+      return false;
+    }
+    
+    // Check if it contains only valid base64 characters
+    const base64Regex = /^[A-Za-z0-9+/]+={0,2}$/;
+    return base64Regex.test(base64String);
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { prompt, characterImage, characterId } = await request.json();
@@ -216,10 +277,11 @@ Return ONLY the prompt text, nothing else:`
     console.log('Generating image with ModelsLab MoP Mix Juggernaut (DMD-optimized for photorealism)...');
 
     let bodyImageUrl: string | null = null;
+    let bodyImageBase64: string | null = null;
     let usedModelsLab = false;
 
     // Try ModelsLab API with MoP Mix Juggernaut (DMD-enabled, excels at photorealism)
-    const modelsLabApiKey = process.env.MODELSLAB_API_KEY ;
+    const modelsLabApiKey = process.env.MODELSLAB_API_KEY;
     
     try {
       const modelsLabResponse = await fetch('https://modelslab.com/api/v6/images/text2img', {
@@ -251,12 +313,15 @@ Return ONLY the prompt text, nothing else:`
           const imageUrl = modelsLabData.output[0];
           
           // Download and convert to base64
-          const imageResponse = await fetch(imageUrl);
-          const imageBuffer = await imageResponse.arrayBuffer();
-          const base64 = Buffer.from(imageBuffer).toString('base64');
-          bodyImageUrl = `data:image/jpeg;base64,${base64}`;
-          usedModelsLab = true;
-          console.log('✅ Image generated successfully with ModelsLab MoP Mix Juggernaut');
+          const downloadedBase64 = await downloadImageAsBase64(imageUrl);
+          if (downloadedBase64 && isValidBase64Image(downloadedBase64)) {
+            bodyImageBase64 = downloadedBase64;
+            bodyImageUrl = `data:image/jpeg;base64,${downloadedBase64}`;
+            usedModelsLab = true;
+            console.log('✅ Image generated successfully with ModelsLab MoP Mix Juggernaut');
+          } else {
+            console.warn('⚠️ Downloaded image is invalid, skipping');
+          }
         } 
         // Check for processing status
         else if (modelsLabData.status === 'processing' && (modelsLabData.id || modelsLabData.fetch_result)) {
@@ -291,13 +356,14 @@ Return ONLY the prompt text, nothing else:`
               if (statusData.status === 'success' && statusData.output && Array.isArray(statusData.output) && statusData.output.length > 0) {
                 const imageUrl = statusData.output[0];
                 
-                const imageResponse = await fetch(imageUrl);
-                const imageBuffer = await imageResponse.arrayBuffer();
-                const base64 = Buffer.from(imageBuffer).toString('base64');
-                bodyImageUrl = `data:image/jpeg;base64,${base64}`;
-                taskCompleted = true;
-                usedModelsLab = true;
-                console.log('✅ Image generated successfully with ModelsLab MoP Mix Juggernaut (async)');
+                const downloadedBase64 = await downloadImageAsBase64(imageUrl);
+                if (downloadedBase64 && isValidBase64Image(downloadedBase64)) {
+                  bodyImageBase64 = downloadedBase64;
+                  bodyImageUrl = `data:image/jpeg;base64,${downloadedBase64}`;
+                  taskCompleted = true;
+                  usedModelsLab = true;
+                  console.log('✅ Image generated successfully with ModelsLab MoP Mix Juggernaut (async)');
+                }
               } else if (statusData.status === 'failed' || statusData.status === 'error') {
                 throw new Error(`ModelsLab task failed: ${statusData.message || 'Unknown error'}`);
               }
@@ -395,12 +461,13 @@ Return ONLY the prompt text, nothing else:`
             if (statusData.task.status === 'TASK_STATUS_SUCCEED') {
               const imageUrl = statusData.images?.[0]?.image_url;
               if (imageUrl) {
-                const imageResponse = await fetch(imageUrl);
-                const imageBuffer = await imageResponse.arrayBuffer();
-                const base64 = Buffer.from(imageBuffer).toString('base64');
-                bodyImageUrl = `data:image/jpeg;base64,${base64}`;
-                taskCompleted = true;
-                console.log('✅ Image generated successfully with Novita AI (fallback)');
+                const downloadedBase64 = await downloadImageAsBase64(imageUrl);
+                if (downloadedBase64 && isValidBase64Image(downloadedBase64)) {
+                  bodyImageBase64 = downloadedBase64;
+                  bodyImageUrl = `data:image/jpeg;base64,${downloadedBase64}`;
+                  taskCompleted = true;
+                  console.log('✅ Image generated successfully with Novita AI (fallback)');
+                }
               }
             } else if (statusData.task.status === 'TASK_STATUS_FAILED') {
               throw new Error('Novita task failed');
@@ -421,7 +488,7 @@ Return ONLY the prompt text, nothing else:`
       }
     }
 
-    if (!bodyImageUrl) {
+    if (!bodyImageUrl || !bodyImageBase64) {
       return NextResponse.json(
         { error: 'Failed to generate image with both ModelsLab and Novita' },
         { status: 500 }
@@ -430,7 +497,7 @@ Return ONLY the prompt text, nothing else:`
 
     console.log('Image generated successfully, starting face swap...');
 
-    // Step 3: Face swap using RunPod
+    // Step 3: Face swap using RunPod with robust error handling
     const runpodApiKey = process.env.RUNPOD_API_KEY;
     if (!runpodApiKey) {
       console.warn('RunPod API key not configured, returning image without face swap');
@@ -442,23 +509,34 @@ Return ONLY the prompt text, nothing else:`
     }
 
     try {
-      // Convert character image URL to base64
-      const characterImageResponse = await fetch(characterImage);
-      if (!characterImageResponse.ok) {
-        throw new Error('Failed to fetch character image');
+      // Download and validate character image
+      console.log('🔍 Validating and downloading character image...');
+      const characterBase64 = await downloadImageAsBase64(characterImage);
+      
+      if (!characterBase64 || !isValidBase64Image(characterBase64)) {
+        console.warn('⚠️ Character image is invalid or could not be downloaded, skipping face swap');
+        return NextResponse.json({
+          success: true,
+          imageUrl: bodyImageUrl,
+          prompt: prompt,
+          note: 'Character image invalid, returning generated image without face swap'
+        });
       }
-      const characterBuffer = await characterImageResponse.arrayBuffer();
-      const characterBase64 = Buffer.from(characterBuffer).toString('base64');
 
-      // Convert generated body image URL to base64
-      const bodyImageResponse = await fetch(bodyImageUrl);
-      if (!bodyImageResponse.ok) {
-        throw new Error('Failed to fetch body image');
+      // Validate body image base64
+      if (!isValidBase64Image(bodyImageBase64)) {
+        console.warn('⚠️ Body image base64 is invalid, skipping face swap');
+        return NextResponse.json({
+          success: true,
+          imageUrl: bodyImageUrl,
+          prompt: prompt,
+          note: 'Body image invalid, returning generated image without face swap'
+        });
       }
-      const bodyBuffer = await bodyImageResponse.arrayBuffer();
-      const bodyBase64 = Buffer.from(bodyBuffer).toString('base64');
 
       console.log('Starting face swap with RunPod...');
+      console.log(`📊 Character image size: ${characterBase64.length} bytes`);
+      console.log(`📊 Body image size: ${bodyImageBase64.length} bytes`);
 
       // Perform face swap
       const runpodResponse = await fetch('https://api.runpod.ai/v2/f5f72j1ier8gy3/runsync', {
@@ -470,7 +548,7 @@ Return ONLY the prompt text, nothing else:`
         body: JSON.stringify({
           input: {
             source_image: characterBase64,
-            target_image: bodyBase64,
+            target_image: bodyImageBase64,
             source_indexes: "-1",
             target_indexes: "-1",
             background_enhance: true,
@@ -493,12 +571,35 @@ Return ONLY the prompt text, nothing else:`
 
       if (runpodData.status !== "COMPLETED") {
         console.error('RunPod face swap incomplete:', runpodData);
+        
+        // Check for specific error about image identification
+        if (runpodData.error?.includes('cannot identify image file')) {
+          console.log('⚠️ RunPod could not identify image file, returning original image');
+          return NextResponse.json({
+            success: true,
+            imageUrl: bodyImageUrl,
+            prompt: prompt,
+            note: 'Face swap failed due to image format issue'
+          });
+        }
+        
         throw new Error(`Face swap incomplete: ${runpodData.status}`);
       }
 
       const resultImageData = runpodData.output?.image;
       if (!resultImageData) {
         throw new Error('No result image from face swap');
+      }
+
+      // Validate result image
+      if (!isValidBase64Image(resultImageData)) {
+        console.warn('⚠️ Face swap result image is invalid');
+        return NextResponse.json({
+          success: true,
+          imageUrl: bodyImageUrl,
+          prompt: prompt,
+          note: 'Face swap produced invalid image'
+        });
       }
 
       const finalImage = `data:image/jpeg;base64,${resultImageData}`;
