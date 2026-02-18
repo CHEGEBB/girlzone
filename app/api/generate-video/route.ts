@@ -137,8 +137,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Build webhook URL
-    const webhookUrl = `${request.nextUrl.origin}/api/video-webhook?userId=${userId}&prompt=${encodeURIComponent(prompt)}`;
-
+    const webhookUrl = `http://194.163.157.79:3001/api/video-webhook?userId=${userId}&prompt=${encodeURIComponent(prompt)}`;
+    
     // Call ModelsLab with webhook
     console.log("🎬 Starting ModelsLab video generation with webhook...");
     const modelsLabRequestBody = {
