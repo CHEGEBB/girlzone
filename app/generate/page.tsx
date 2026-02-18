@@ -891,28 +891,28 @@ export default function GenerateImagePage() {
     checkVideoStatus(jobId, provider, fetchUrl, futureVideoUrl)
     videoStatusCheckInterval.current = setInterval(() => {
       checkVideoStatus(jobId, provider, fetchUrl, futureVideoUrl)
-    }, 3000)
+    }, 5000)
   }
 
   const checkVideoStatus = async (jobId: string, provider?: string, fetchUrl?: string, futureVideoUrl?: string) => {
     try {
-      let url = `/api/check-video-generation?jobId=${jobId}&userId=${user?.id}`
-if (provider) {
-  url += `&provider=${provider}`
-}
-if (fetchUrl) {
-  url += `&fetch_url=${encodeURIComponent(fetchUrl)}`
-}
-if (futureVideoUrl) {
-  url += `&future_video_url=${encodeURIComponent(futureVideoUrl)}`
-}
+      let url = `/api/check-video-generation?jobId=${jobId}`
+      if (provider) {
+        url += `&provider=${provider}`
+      }
+      if (fetchUrl) {
+        url += `&fetch_url=${encodeURIComponent(fetchUrl)}`
+      }
+      if (futureVideoUrl) {
+        url += `&future_video_url=${encodeURIComponent(futureVideoUrl)}`
+      }
+      
       const response = await fetch(url)
   
       if (!response.ok) {
         if (response.status >= 400 && response.status < 500) {
-          if (videoStatusCheckInterval.current) clearInterval(videoStatusCheckInterval.current)
-          setError("Failed to check video generation status")
-          setIsGenerating(false)
+          // Don't stop polling on 4xx, just log and continue
+          console.error("Status check error:", response.status)
         }
         return
       }
