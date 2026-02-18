@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import supabase from "@/lib/supabase"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import type { Character, CharacterInsert, CharacterUpdate } from "@/lib/types"
 import { checkTableExists, initializeDatabase, checkStorageBucket } from "@/lib/db-init"
 
@@ -72,6 +72,7 @@ const formatError = (err: unknown): string => {
 }
 
 export function CharacterProvider({ children }: { children: ReactNode }) {
+  const supabase = createClientComponentClient()
   const [characters, setCharacters] = useState<Character[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
