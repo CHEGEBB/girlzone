@@ -188,7 +188,7 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Total Revenue",
-      value: typeof activeCharactersCount === 'number' ? activeCharactersCount.toString() : (characters?.length?.toString() || "0"),
+      value: typeof totalRevenue === 'number' ? `$${totalRevenue.toFixed(2)}` : "$0.00",
       change: "0%",
       changeType: "neutral",
       icon: MessageSquare,
@@ -530,26 +530,29 @@ export default function AdminDashboardPage() {
             <CardContent>
               {recentActivity.length > 0 ? (
                 <ul className="space-y-4">
-                  {recentActivity.map((activity) => (
-                    <li key={activity.id} className="flex items-center space-x-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">
-                          {activity.users_view.username.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">
-                          {activity.users_view.username}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {activity.description}
-                        </p>
-                      </div>
-                      <div className="ml-auto text-xs text-slate-500 dark:text-slate-400">
-                        {new Date(activity.created_at).toLocaleTimeString()}
-                      </div>
-                    </li>
-                  ))}
+                  {recentActivity.map((activity) => {
+                    const username = activity.users_view?.username ?? activity.user_id ?? "Unknown"
+                    return (
+                      <li key={activity.id} className="flex items-center space-x-4">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-medium">
+                            {username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">
+                            {username}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {activity.description ?? activity.type}
+                          </p>
+                        </div>
+                        <div className="ml-auto text-xs text-slate-500 dark:text-slate-400">
+                          {new Date(activity.created_at).toLocaleTimeString()}
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               ) : (
                 <div className="text-center py-8">

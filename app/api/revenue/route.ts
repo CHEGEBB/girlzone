@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const { data, error, count } = await supabase
-        .from("revenue_transactions")
+        .from("token_transactions")
         .select("amount", { count: "exact" });
 
     if (error) {
@@ -18,7 +18,9 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to fetch total revenue" }, { status: 500 });
     }
 
-    const totalRevenue = data ? data.reduce((acc, transaction) => acc + transaction.amount, 0) : 0;
+    const totalRevenue = data 
+        ? data.reduce((acc, transaction) => acc + (Number(transaction.amount) || 0), 0) 
+        : 0;
 
     return NextResponse.json({ totalRevenue, totalOrders: count });
 }

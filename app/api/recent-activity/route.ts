@@ -11,7 +11,7 @@ export async function GET() {
 
     const { data, error } = await supabase
         .from("token_transactions")
-        .select("*, users_view(username)")
+        .select("*, users_view(username, email)")
         .order("created_at", { ascending: false })
         .limit(10)
 
@@ -20,5 +20,5 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to fetch recent activity" }, { status: 500 })
     }
 
-    return NextResponse.json({ activity: data })
+    return NextResponse.json({ activity: data ?? [] })
 }
