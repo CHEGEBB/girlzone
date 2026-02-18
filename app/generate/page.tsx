@@ -896,17 +896,16 @@ export default function GenerateImagePage() {
 
   const checkVideoStatus = async (jobId: string, provider?: string, fetchUrl?: string, futureVideoUrl?: string) => {
     try {
-      let url = `/api/check-video-generation?jobId=${jobId}`
-      if (provider) {
-        url += `&provider=${provider}`
-      }
-      if (fetchUrl) {
-        url += `&fetch_url=${encodeURIComponent(fetchUrl)}`
-      }
-      if (futureVideoUrl) {
-        url += `&future_video_url=${encodeURIComponent(futureVideoUrl)}`
-      }
-      
+      let url = `/api/check-video-generation?jobId=${jobId}&userId=${user?.id}`
+if (provider) {
+  url += `&provider=${provider}`
+}
+if (fetchUrl) {
+  url += `&fetch_url=${encodeURIComponent(fetchUrl)}`
+}
+if (futureVideoUrl) {
+  url += `&future_video_url=${encodeURIComponent(futureVideoUrl)}`
+}
       const response = await fetch(url)
   
       if (!response.ok) {
