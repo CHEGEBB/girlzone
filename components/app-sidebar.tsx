@@ -16,7 +16,6 @@ import {
   Heart,
   PlusSquare,
   Users,
-  DollarSign,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-context"
 import { useAuthModal } from "@/components/auth-modal-context"
@@ -35,7 +34,6 @@ export default function AppSidebar() {
   const { openLoginModal } = useAuthModal()
   const { settings } = useSite()
   const { t } = useLanguage()
-  const [monetizationEnabled, setMonetizationEnabled] = useState<boolean>(true)
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -48,24 +46,6 @@ export default function AppSidebar() {
     }
     handleRouteChange()
   }, [pathname, setIsOpen])
-
-  useEffect(() => {
-    const checkMonetization = async () => {
-      try {
-        const res = await fetch("/api/monetization-status")
-        if (res.ok) {
-          const data = await res.json()
-          if (typeof data.monetization_enabled === "boolean") {
-            setMonetizationEnabled(data.monetization_enabled)
-          }
-        }
-      } catch (e) {
-        // Default to enabled on error
-        setMonetizationEnabled(true)
-      }
-    }
-    checkMonetization()
-  }, [])
 
   const isAdminPage = pathname?.startsWith("/admin")
   if (isAdminPage) {
@@ -97,9 +77,6 @@ export default function AppSidebar() {
       href: "/generate",
       active: pathname?.startsWith("/generate"),
     },
-  ] as Array<{ icon: React.ReactNode; label: string; href: string; active: boolean }>
-
-  const secondaryMenuItems = [
     {
       icon: <PlusSquare className="h-5 w-5" />,
       label: t("nav.createCharacter"),
@@ -112,21 +89,7 @@ export default function AppSidebar() {
       href: "/collections",
       active: pathname?.startsWith("/collections"),
     },
-  ]
-
-  // Add secondary items to main menu
-  menuItems.push(...secondaryMenuItems)
-
-  if (monetizationEnabled) {
-    menuItems.push({
-      icon: <DollarSign className="h-5 w-5" />,
-      label: t("nav.monetization"),
-      href: "/monetization",
-      active: pathname?.startsWith("/monetization") || false,
-    })
-  }
-
-
+  ] as Array<{ icon: React.ReactNode; label: string; href: string; active: boolean }>
 
   const supportLinks: Array<{ icon: React.ReactNode; label: string; href: string; active: boolean }> = [
     {
