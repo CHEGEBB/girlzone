@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from "@/lib/supabase/client"
 import { uploadImageToBunny } from "@/lib/cloudinary-upload"
 
-// const MODELSLAB_API_KEY = process.env.MODELSLAB_API_KEY!
-// const MODELSLAB_IMG2VIDEO_ENDPOINT = "https://modelslab.com/api/v6/video/img2video_ultra"
 const MODELSLAB_API_KEY = process.env.MODELSLAB_API_KEY!
-const MODELSLAB_ENTERPRISE_API_KEY = process.env.MODELSLAB_ENTERPRISE_API_KEY!
-const MODELSLAB_IMG2VIDEO_ENDPOINT = "https://modelslab.com/api/v1/enterprise/video/img2video"
+const MODELSLAB_IMG2VIDEO_ENDPOINT = "https://modelslab.com/api/v6/video/img2video_ultra"
 const VIDEO_TOKEN_COST = 50;
 
 export async function POST(request: NextRequest) {
